@@ -1,18 +1,20 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const qrcode = require('qrcode-terminal');
+const qrcodeTerminal = require('qrcode-terminal');
+const qrcode = require('qrcode');
+
 const {
     Client,
     LocalAuth
 } = require('whatsapp-web.js');
 
+require('dotenv').config();
 const app = express();
-const port = 3000;
 
+const port = process.env.PORT;
 // Middlewares
 app.use(bodyParser.json());
 
-require('dotenv').config();
 const TOKEN = process.env.API_TOKEN;
 
 const verifyToken = (req, res, next) => {
@@ -38,12 +40,10 @@ const client = new Client({
         args: ['--no-sandbox']
     }
 });
-
+let latestQR = '';
 client.on('qr', qr => {
-    console.log('Scan QR Code Below:');
-    qrcode.generate(qr, {
-        small: true
-    });
+    latestQR = qr;
+    console.log('QR received! Open /qr to view.');
 });
 
 client.on('ready', () => {
@@ -91,6 +91,24 @@ app.get('/', async (req, res) => {
         message: 'Hello World!',
         data: []
     });
+});
+app.get('/qr', async (req, res) => {
+    if (!latestQR) {
+        return res.send('No QR code available.');
+    }
+    try {
+        const qrImage = await qrcode.toDataURL(latestQR);
+        res.send(`
+            <html>
+                <body>
+                    <h2>Scan QR Code</h2>
+                    <img src="${qrImage}" />
+                </body>
+            </html>
+        `);
+    } catch (err) {
+        res.status(500).send('Error generating QR code.');
+    }
 });
 app.listen(port, () => {
     console.log(`🚀 API Server listening at http://localhost:${port}`);
