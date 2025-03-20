@@ -3,36 +3,39 @@ const bodyParser = require('body-parser');
 const qrcodeTerminal = require('qrcode-terminal');
 const qrcode = require('qrcode');
 
-const {
-    Client,
-    LocalAuth
-} = require('whatsapp-web.js');
+const { Client, LocalAuth } = require('whatsapp-web.js');
 
 require('dotenv').config();
 const app = express();
 
 const port = process.env.PORT;
+const TOKEN = process.env.API_TOKEN;
+
 // Middlewares
 app.use(bodyParser.json());
 
-const TOKEN = process.env.API_TOKEN;
-
+// Token verification middleware
 const verifyToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
-    if (!authHeader) return res.status(401).json({
-        status: false,
-        message: 'No token provided'
-    });
+    if (!authHeader) {
+        return res.status(401).json({
+            status: false,
+            message: 'No token provided'
+        });
+    }
 
     const token = authHeader.split(' ')[1];
-    if (token !== TOKEN) return res.status(403).json({
-        status: false,
-        message: 'Invalid token'
-    });
+    if (token !== TOKEN) {
+        return res.status(403).json({
+            status: false,
+            message: 'Invalid token'
+        });
+    }
 
     next();
 };
 
+// WhatsApp client setup
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
@@ -40,18 +43,88 @@ const client = new Client({
         args: ['--no-sandbox']
     }
 });
+
 let latestQR = '';
+let isClientReady = false; // Track WhatsApp client status
+
 client.on('qr', qr => {
     latestQR = qr;
-    console.log('QR received! Open /qr to view.');
+    console.log('📲 QR received! Open /qr to view.');
 });
 
 client.on('ready', () => {
+    isClientReady = true;
     console.log('✅ WhatsApp client is ready!');
+});
+
+client.on('disconnected', (reason) => {
+    isClientReady = false;
+    console.log('❌ WhatsApp client disconnected:', reason);
+});
+
+client.on('auth_failure', (msg) => {
+    isClientReady = false;
+    console.error('❌ Authentication failure:', msg);
 });
 
 client.initialize();
 
+// Routes
+
+app.get('/', async (req, res) => {
+    res.status(200).json({
+        status: true,
+        message: 'Hello World!',
+        data: []
+    });
+});
+
+app.get('/qr', verifyToken, async (req, res) => {
+    if (!latestQR) {
+        return res.send('No QR code available. Client might already be connected.');
+    }
+
+    try {
+        const qrImage = await qrcode.toDataURL(latestQR);
+        res.send(`
+            <html>
+                <body>
+                    <h2>Scan QR Code</h2>
+                    <img src="${qrImage}" />
+                </body>
+            </html>
+        `);
+    } catch (err) {
+        res.status(500).send('Error generating QR code.');
+    }
+});
+
+// NEW: WhatsApp Web client connection status
+app.get('/status', verifyToken, async (req, res) => {
+    try {
+        let clientInfo = {};
+        if (isClientReady) {
+            clientInfo = client.info; // Basic client information (wid, pushname, etc.)
+        }
+
+        res.status(200).json({
+            status: true,
+            message: 'Client status fetched successfully',
+            data: {
+                ready: isClientReady,
+                clientInfo: isClientReady ? clientInfo : null
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: false,
+            message: 'Error fetching status',
+            error: error.message
+        });
+    }
+});
+
+// Send message endpoint
 app.post('/send-message', verifyToken, async (req, res) => {
     let number = req.body.number;
     const message = req.body.message;
@@ -63,6 +136,7 @@ app.post('/send-message', verifyToken, async (req, res) => {
         });
     }
 
+    // Convert to WhatsApp international format
     if (number.startsWith('0')) {
         number = '62' + number.slice(1);
     }
@@ -85,31 +159,7 @@ app.post('/send-message', verifyToken, async (req, res) => {
         });
     }
 });
-app.get('/', async (req, res) => {
-    res.status(200).json({
-        status: true,
-        message: 'Hello World!',
-        data: []
-    });
-});
-app.get('/qr', async (req, res) => {
-    if (!latestQR) {
-        return res.send('No QR code available.');
-    }
-    try {
-        const qrImage = await qrcode.toDataURL(latestQR);
-        res.send(`
-            <html>
-                <body>
-                    <h2>Scan QR Code</h2>
-                    <img src="${qrImage}" />
-                </body>
-            </html>
-        `);
-    } catch (err) {
-        res.status(500).send('Error generating QR code.');
-    }
-});
+
 app.listen(port, () => {
     console.log(`🚀 API Server listening at http://localhost:${port}`);
 });
