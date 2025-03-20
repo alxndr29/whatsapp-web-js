@@ -52,30 +52,9 @@ PORT=3000
 ### 4. Run the application
 
 ```bash
-npm start
+node index.js
 ```
 
-Or, if you are using `nodemon` for development:
-
-```bash
-npm run dev
-```
-
-The server will start on `http://localhost:3000` (or the port you specified).
-
-## Scripts
-
-- `npm start` — Start the server.
-- `npm run dev` — Start the server in development mode (requires `nodemon`).
-
-## Project Structure
-
-```
-├── src/
-├── .env
-├── package.json
-└── README.md
-```
 
 ## Environment Variables
 
