@@ -1,3 +1,13 @@
+## 🙏 Thanks
+
+Special thanks to [pedroslopez](https://github.com/pedroslopez) for the [whatsapp-web.js](https://github.com/pedroslopez/whatsapp-web.js) library!
+
+## Credits
+
+This project is powered by [whatsapp-web.js](https://github.com/pedroslopez/whatsapp-web.js), developed and maintained by [pedroslopez](https://github.com/pedroslopez).  
+Thank you for your contributions to the open-source community!
+
+
 # Node.js Application
 
 A simple Node.js application using **Node.js v18**.
