@@ -11,10 +11,10 @@ const app = express();
 const port = process.env.PORT;
 const TOKEN = process.env.API_TOKEN;
 
-// Middlewares
+
 app.use(bodyParser.json());
 
-// Token verification middleware
+
 const verifyToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     if (!authHeader) {
@@ -45,7 +45,7 @@ const client = new Client({
 });
 
 let latestQR = '';
-let isClientReady = false; // Track WhatsApp client status
+let isClientReady = false; 
 
 client.on('qr', qr => {
     latestQR = qr;
@@ -104,7 +104,7 @@ app.get('/status', verifyToken, async (req, res) => {
     try {
         let clientInfo = {};
         if (isClientReady) {
-            clientInfo = client.info; // Basic client information (wid, pushname, etc.)
+            clientInfo = client.info; 
         }
 
         res.status(200).json({
@@ -124,7 +124,7 @@ app.get('/status', verifyToken, async (req, res) => {
     }
 });
 
-// Send message endpoint
+
 app.post('/send-message', verifyToken, async (req, res) => {
     let number = req.body.number;
     const message = req.body.message;
@@ -136,7 +136,6 @@ app.post('/send-message', verifyToken, async (req, res) => {
         });
     }
 
-    // Convert to WhatsApp international format
     if (number.startsWith('0')) {
         number = '62' + number.slice(1);
     }
