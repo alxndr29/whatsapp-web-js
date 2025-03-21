@@ -4,7 +4,10 @@ const qrcodeTerminal = require('qrcode-terminal');
 const qrcode = require('qrcode');
 const puppeteer = require('puppeteer');
 
-const { Client, LocalAuth } = require('whatsapp-web.js');
+const {
+    Client,
+    LocalAuth
+} = require('whatsapp-web.js');
 
 require('dotenv').config();
 const app = express();
@@ -44,11 +47,11 @@ const client = new Client({
         executablePath: puppeteer.executablePath(),
         headless: true,
         args: ['--no-sandbox', '--disable-setuid-sandbox']
-      }
+    }
 });
 
 let latestQR = '';
-let isClientReady = false; 
+let isClientReady = false;
 
 client.on('qr', qr => {
     latestQR = qr;
@@ -107,7 +110,7 @@ app.get('/status', verifyToken, async (req, res) => {
     try {
         let clientInfo = {};
         if (isClientReady) {
-            clientInfo = client.info; 
+            clientInfo = client.info;
         }
 
         res.status(200).json({
@@ -131,7 +134,7 @@ app.get('/status', verifyToken, async (req, res) => {
 app.post('/send-message', verifyToken, async (req, res) => {
     let number = req.body.number;
     const message = req.body.message;
-
+    console.log(req);
     if (!number || !message) {
         return res.status(400).json({
             status: false,
@@ -147,7 +150,7 @@ app.post('/send-message', verifyToken, async (req, res) => {
 
     try {
         const sent = await client.sendMessage(chatId, message);
-        console.log(number +" => "+ message);
+        console.log(number + " => " + message);
         res.status(200).json({
             status: true,
             message: 'Message sent!',
