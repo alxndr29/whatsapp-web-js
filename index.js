@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const qrcodeTerminal = require('qrcode-terminal');
 const qrcode = require('qrcode');
+const puppeteer = require('puppeteer');
 
 const { Client, LocalAuth } = require('whatsapp-web.js');
 
@@ -39,9 +40,11 @@ const verifyToken = (req, res, next) => {
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
+        // Use the puppeteer you installed
+        executablePath: puppeteer.executablePath(),
         headless: true,
-        args: ['--no-sandbox']
-    }
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      }
 });
 
 let latestQR = '';
