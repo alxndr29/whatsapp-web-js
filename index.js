@@ -147,6 +147,7 @@ app.post('/send-message', verifyToken, async (req, res) => {
 
     try {
         const sent = await client.sendMessage(chatId, message);
+        console.log(number +" => "+ message);
         res.status(200).json({
             status: true,
             message: 'Message sent!',
