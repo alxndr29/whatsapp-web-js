@@ -134,7 +134,7 @@ app.get('/status', verifyToken, async (req, res) => {
 app.post('/send-message', verifyToken, async (req, res) => {
     let number = req.body.number;
     const message = req.body.message;
-    console.log(req);
+    console.log(req.body);
     if (!number || !message) {
         return res.status(400).json({
             status: false,
