@@ -135,7 +135,6 @@ app.post('/send-message', verifyToken, async (req, res) => {
     let number = req.body.number;
     const message = req.body.message;
     console.log(req.body);
-
     if (!number || !message) {
         return res.status(400).json({
             status: false,
@@ -149,49 +148,23 @@ app.post('/send-message', verifyToken, async (req, res) => {
 
     const chatId = `${number}@c.us`;
 
-    const sendMessageWithRetry = async (retries = 5, delay = 5000) => {
-        for (let attempt = 1; attempt <= retries; attempt++) {
-            try {
-                const sent = await client.sendMessage(chatId, message);
-                return {
-                    success: true,
-                    data: sent,
-                    attempt
-                };
-            } catch (error) {
-                console.error(`Attempt ${attempt} failed:`, error.message);
-                if (attempt < retries) {
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                } else {
-                    return {
-                        success: false,
-                        error,
-                        attempt
-                    };
-                }
-            }
-        }
-    };
-
-    const result = await sendMessageWithRetry(5, 5000);
-
-    if (result.success) {
-        console.log(`Success on attempt ${result.attempt}: ${number} => ${message}`);
+    try {
+        const sent = await client.sendMessage(chatId, message);
+        console.log(number + " => " + message);
         res.status(200).json({
             status: true,
             message: 'Message sent!',
-            attempt: result.attempt,
-            data: result.data
+            data: sent
         });
-    } else {
+    } catch (error) {
+        console.error(error);
         res.status(500).json({
             status: false,
-            message: `Failed to send message after ${result.attempt} attempts`,
-            error: result.error.message
+            message: 'Failed to send message',
+            error: error.message
         });
     }
 });
-
 
 app.listen(port, () => {
     console.log(`🚀 API Server listening at http://localhost:${port}`);
