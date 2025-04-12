@@ -149,23 +149,31 @@ app.post('/send-message', verifyToken, async (req, res) => {
 
     const chatId = `${number}@c.us`;
 
-    const sendMessageWithRetry = async (retries = 5, delay = 500) => {
+    const sendMessageWithRetry = async (retries = 5, delay = 5000) => {
         for (let attempt = 1; attempt <= retries; attempt++) {
             try {
                 const sent = await client.sendMessage(chatId, message);
-                return { success: true, data: sent, attempt };
+                return {
+                    success: true,
+                    data: sent,
+                    attempt
+                };
             } catch (error) {
                 console.error(`Attempt ${attempt} failed:`, error.message);
                 if (attempt < retries) {
                     await new Promise(resolve => setTimeout(resolve, delay));
                 } else {
-                    return { success: false, error, attempt };
+                    return {
+                        success: false,
+                        error,
+                        attempt
+                    };
                 }
             }
         }
     };
 
-    const result = await sendMessageWithRetry(5, 500); 
+    const result = await sendMessageWithRetry(5, 5000);
 
     if (result.success) {
         console.log(`Success on attempt ${result.attempt}: ${number} => ${message}`);
