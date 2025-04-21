@@ -18,7 +18,7 @@ const client = new Client({
     dataPath: './session-data'  // Custom session storage path
   }),
   puppeteer: {
-    executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium-browser',
+    // executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium-browser',
     headless: true,
     args: [
       '--no-sandbox',
@@ -105,6 +105,7 @@ app.get('/qr', authenticate, async (req, res) => {
         </body>
       </html>
     `);
+    console.log('QR Code Success')
   } catch (err) {
     console.error('QR generation error:', err);
     res.status(500).json({ error: 'Failed to generate QR' });
@@ -132,6 +133,7 @@ app.post('/send-message', authenticate, async (req, res) => {
       messageId: sentMessage.id.id,
       timestamp: sentMessage.timestamp
     });
+    console.log('Send Message Success with ID: ', sentMessage.id.id)
   } catch (error) {
     console.error('Send message error:', error);
     res.status(500).json({ error: error.message });
